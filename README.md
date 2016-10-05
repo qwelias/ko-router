@@ -11,7 +11,7 @@ Knockout dummy router
 Upon load creates ```window.router```
 
 ### router.route
-ko.observableArray containing pathname splitted by '/'.
+```ko.observableArray``` containing pathname splitted by '/'.
 Updated after successful navigation.
 
 ### router.navigate( data )
@@ -74,6 +74,7 @@ window.router.guard.set( null, function ( id ) {
 ```
 
 ### page binding
-
+TODO
 
 ### nav binding
+TODO
