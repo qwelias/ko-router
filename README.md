@@ -45,45 +45,69 @@ Called if path not found. Override it.
 #### root
 A root Page.
 
-#### Examples
+### window.router.Page( data )
+Page class.
 
-```js
-/*
-location.pathname = /home/Item
-Load items table.
-*/
-window.router.guard.set( 'home', function ( id ) {
-    console.log( 'deed@Item', id );
-    if ( id === 'Item' ) return Item.table.reload();
-} );
+#### element = data.element
+Element page bound to, none for root.
 
-/*
-location.pathname = /home/Item/<some_id or new>
-Load a specific item or create new.
-*/
-window.router.guard.set( 'home.Item', function ( id ) {
-    console.log( 'deed@Item', id );
-    if ( id === 'new' ) Item.wo._id = null;
-    else Item.wo._id = id;
-    return Item.wo.load();
-} );
+#### route = data.route
+Route to match, none for root.
 
-/*
-location.pathname = /
-Check if user logged in.
-*/
-window.router.guard.set( null, function ( id ) {
-    console.log( 'deed@User', id );
-    if ( !ctx.me._id && id !== 'login' ) {
-        return window.router.navigate( '/login' );
-    } else if ( ( id === 'login' || !id ) && ctx.me._id ) {
-        return window.router.navigate( '/home' );
-    };
-} );
-```
+Values:
+- '/' - will match empty route, usefull for setting a default page at some level.
+- *string* - actual string to match.
+- '\*' - match anything none empty.
 
-### page binding
-TODO
+#### title = data.title
+Title to set to the document, defaults to parent's title.
 
-### nav binding
-TODO
+#### template = data.template
+Template value to pass to **Knockout**'s *template* binding.
+
+#### guards = data.guards
+Array of functions to be called in ```Promise.all``` on an attempt to open the page.
+
+Each function accepts it's piece of route as first argument and is boud to a page, should return a Promise. Root page is the exception as it accepts whole array of routes. Useful for any kind of (a)synchronous checks/prehooks.
+
+If you want to return a ```window.router.navigate( href )``` wrap it into ```Promise.reject``` so that previous navigation stops.
+
+#### current = ''
+Current page route.
+
+#### src = data.src
+Template source to load if not found.
+
+#### context = data.context
+**Knockout**'s element's *bindingContext*.
+
+#### to = {}
+References to child pages.
+Filled automatically.
+
+#### path()
+Return a path to the page.
+
+#### check()
+Internal function.
+
+#### ensureTemplate()
+Internal function.
+
+#### open( current )
+Internal function.
+
+#### close()
+Internal function.
+
+#### closeChildren()
+Internal function.
+
+#### closeSiblings()
+Internal function.
+
+#### next( route )
+Internal function.
+
+#### parent()
+Return parent.
