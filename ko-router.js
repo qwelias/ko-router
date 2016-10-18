@@ -2,120 +2,63 @@
     "use strict";
 
     var router = ctx.router = {
+        on404: function ( rt, e ) {
+            throw new Error( [
+                'Path' + router.resolvePath.apply( router, rt ) + ' not found.',
+                'You can handle the error by overriding this function.'
+            ].join( '\n' ) );
+        },
         route: ctx.ko.observableArray(),
-        guard: function guard( rt ) {
-            router.loader.start();
-            console.log( 'GUARD', rt );
-            var all = [];
-            var node = router.guard.tree;
-
-            do {
-                var id = rt.shift();
-
-                all.push( Promise.all( ( node._deeds || [] ).map( function ( deed ) {
-                    return deed( id );
-                } ) ) );
-
-                node = node[ id ];
-            } while ( node && rt.length );
-
-            return Promise.all( all ).then( router.loader.done );
-        },
-        path: function path( pathname ) {
-            return ( pathname || ctx.location.pathname ).slice( 1 ).split( '/' ).filter( function ( r ) {
-                return !!r;
-            } );
-        },
-        handlePop: function handlePop() {
-            return router.guard( router.path() ).then( function () {
-                router.route( router.path() );
-            } );
-        },
+        root: Page( {
+            title: ctx.document.title
+        } ),
         resolvePath: function resolvePath() {
             var args = Array.from( arguments );
-            var url = args.reduce( function ( url, path ) {
+            var url = args.map( function ( r ) {
+                if ( r.slice( -1 ) !== '/' ) r += '/';
+                return r;
+            } ).reduce( function ( url, path ) {
                 return new ctx.URL( path, url.href );
             }, new ctx.URL( ctx.location.origin ) );
             return url.pathname + url.search + url.hash;
         },
-        navigate: function navigate( data ) {
-            if ( typeof data === 'string' ) data = {
-                state: {},
-                title: '',
-                href: data
-            };
-            data.href = router.resolvePath( data.href );
-            return router.guard( router.path( data.href ) ).then( function () {
-                ctx.history.pushState(
-                    data.state || {},
-                    data.title || '',
-                    data.href
-                );
-                router.route( router.path() );
+        navigate: function navigate( href ) {
+            href = router.resolvePath( href );
+            return guard( path( href ) ).then( function () {
+                ctx.history.pushState( {}, '', href );
+                router.route( path() );
             } );
         },
-        start: function () {
-            return ( ctx.onpopstate = router.handlePop )();
+        start: function start() {
+            return ( ctx.onpopstate = handlePop )();
         },
         loader: {
             start: function () {},
             done: function () {}
         }
     };
-    router.guard.tree = {};
-    router.guard.set = function guardSet( path, deeds ) {
-        var node = Object.path( router.guard.tree, path, {} );
-        node._deeds = ( node._deeds || [] ).concat( Array.isArray( deeds ) ? deeds : [ deeds ] );
-    };
+    router.Page = Page;
 
     ctx.ko.bindingHandlers[ 'page' ] = {
         init: function ( element, valueAccessor, allBindingsAccessor, viewModel, bindingContext ) {
+            var value = valueAccessor();
+            if ( !value.route ) throw new Error( 'route required' );
+            var parent = bindingContext._page || router.root;
+            var page = parent.to[ value.route ] = parent.to[ value.route ] || Page( {
+                route: value.route
+            } );
+            Object.assign( page, {
+                element: element,
+                src: value.src,
+                title: value.title || parent.title,
+                template: value.template,
+                guards: value.guards,
+                context: bindingContext
+            } );
+            page.close();
             return {
                 controlsDescendantBindings: true
             };
-        },
-        update: function ( element, valueAccessor, allBindingsAccessor, viewModel, bindingContext ) {
-            var res = {
-                controlsDescendantBindings: true
-            };
-            var value = valueAccessor();
-            if ( ( !value.route || value.route === '*' ) && !value.name ) {
-                element.style.display = 'none';
-                return res;
-            };
-            value.name = value.name || value.route;
-            value.name = 'tmpl-page-' + value.name;
-
-            var route = ctx.router.route();
-
-            var _page = {
-                depth: Object.path( bindingContext, '_page.depth' ),
-                title: value.title || Object.path( bindingContext, '_page.title' ) || ctx.document.title
-            };
-            if ( _page.depth === undefined ) _page.depth = -1;
-            _page.depth++;
-
-            if ( !( [ false, null, undefined ].includes( value.route ) && route.length === _page.depth ) &&
-                !( route[ _page.depth ] && [ '*', route[ _page.depth ] ].includes( value.route ) )
-            ) {
-                Array.from( element.children ).map( function ( c ) {
-                    c.remove();
-                } );
-                element.style.display = 'none';
-                return res;
-            };
-
-            var context = bindingContext.extend( {
-                _page: _page
-            } );
-
-            ko.applyBindingsToNode( element, {
-                template: value
-            }, context );
-
-            element.style.display = '';
-
-            return res;
         }
     };
 
@@ -123,19 +66,153 @@
         update: function ( element, valueAccessor, allBindingsAccessor, viewModel, bindingContext ) {
             var value = valueAccessor();
             var page = bindingContext._page || {};
-            var route = router.route().slice( 0, Object.path( bindingContext, '_page.depth', -1 ) + 1 ).join( '/' );
-            if ( route.slice( -1 ) !== '/' ) route += '/';
+            var route = page.path ? page.path() : '/';
             if ( element.tagName === 'A' ) element.href = router.resolvePath( route, value );
             element.onclick = function ( ev ) {
                 if ( ev.button !== 0 || ( ev.ctrlKey && ev.button === 0 ) ) return true;
                 var href = this.href || router.resolvePath( route, value );
-                router.navigate( {
-                    state: page.state || {},
-                    title: page.title || ctx.document.title,
-                    href: href
-                } );
+                router.navigate( href );
                 return false;
             };
         }
     };
+
+    function Page( data ) {
+        if ( !( this instanceof Page ) ) return new Page( data );
+
+        data = data || {};
+        this.element = data.element;
+        this.route = data.route;
+        this.title = data.title;
+        this.template = data.template;
+        this.guards = data.guards || [];
+        this.current = '';
+        this.src = data.src;
+        this.context = data.context;
+        this.to = data.to || {};
+    };
+    Page.prototype.check = function check( route ) {
+        return Promise.all( this.guards.map( function ( guard ) {
+            return guard.call( this, route );
+        }.bind( this ) ) ).then( function () {
+            return this;
+        }.bind( this ) );
+    };
+    Page.prototype.ensureTemplate = function ensureTemplate() {
+        var tmplname = this.template.name || this.template;
+        var tmpl = ctx.document.querySelector( 'script#' + tmplname );
+        if ( !tmpl && !this.src ) return Promise.reject( new Error( 'No template or source supplied' ) );
+        if ( !tmpl && this.src ) return ctx.fetch( encodeURI( this.src ) ).then( function ( response ) {
+            if ( response.status !== 200 ) {
+                var e = new Error( response.statusText );
+                e.response = response;
+                throw e;
+            };
+            return response.text();
+        } ).then( function ( text ) {
+            var tmpl = document.createElement( 'div' );
+            tmpl.innerHTML = text;
+            tmpl = tmpl.firstChild;
+            if ( !tmpl || tmpl.tagName !== 'SCRIPT' || tmpl.id !== tmplname ) throw new Error( 'Wrong source' );
+            ctx.document.body.appendChild( tmpl );
+        } );
+    };
+    Page.prototype.open = function open( current ) {
+        this.current = current;
+        if ( !this.template || !this.element ) return this;
+
+        ctx.ko.applyBindingsToNode( this.element, {
+            template: this.template
+        }, this.context.extend( {
+            _page: this
+        } ) );
+        this.element.style.display = '';
+        return this;
+    };
+    Page.prototype.close = function close() {
+        this.current = '';
+        Array.from( this.element.children ).map( function ( c ) {
+            c.remove();
+        } );
+        this.element.style.display = 'none';
+        return this;
+    };
+    Page.prototype.closeChildren = function closeChildren() {
+        Object.keys( this.to ).map( function ( t ) {
+            this.to[ t ].close();
+        }.bind( this ) );
+    };
+    Page.prototype.closeSiblings = function closeSiblings() {
+        var parent = this.parent();
+        if ( !parent ) return;
+        Object.keys( parent.to ).map( function ( t ) {
+            if ( parent.to[ t ] !== this ) parent.to[ t ].close();
+        }.bind( this ) );
+    };
+    Page.prototype.next = function next( route ) {
+        if ( !route && this.to[ '/' ] ) return this.to[ '/' ];
+        if ( route && this.to[ route ] ) return this.to[ route ];
+        if ( route && this.to[ '*' ] ) return this.to[ '*' ];
+    };
+    Page.prototype.path = function path() {
+        var path = [];
+        var parent = this;
+        do {
+            path.unshift( parent.current );
+            parent = parent.parent();
+        } while ( parent )
+        return path.join( '/' );
+    };
+    Page.prototype.parent = function parent() {
+        if ( this === router.root ) return;
+        return Object.path( this, 'context._page' ) || router.root;
+    };
+
+    function guard( rt ) {
+        router.loader.start();
+        console.log( 'GUARD', rt );
+        return router.root.check( rt ).then( workGuard.bind( this, {
+            rt: Array.from( rt ),
+            page: router.root
+        } ) ).then( function ( page ) {
+            ctx.document.title = page.title || router.root.title;
+            router.loader.done();
+            return Promise.resolve( page );
+        } ).catch( function ( e ) {
+            if ( e instanceof Promise ) return e;
+            if ( e instanceof Error && e.message === 'Page not found' )
+                return router.on404( rt, e );
+            throw e;
+            router.loader.done();
+        } );
+    };
+
+    function workGuard( cur ) {
+        var r = cur.rt.shift();
+        var next = cur.page.next( r );
+        if ( !next ) {
+            cur.page.closeChildren();
+            if ( r ) return Promise.reject( new Error( 'Page not found' ) );
+            return Promise.resolve( cur.page );
+        };
+        return Promise.all( [ next.check( r ), next.ensureTemplate() ] ).then( function ( res ) {
+            cur.page = res[ 0 ];
+            if ( cur.page.current === r ) return;
+            cur.page.closeSiblings();
+            cur.page.open( r );
+        }.bind( this ) ).then( workGuard.bind( this, cur ) );
+    };
+
+    function handlePop() {
+        return guard( path() ).then( function () {
+            router.route( path() );
+        } );
+    };
+
+    function path( pathname ) {
+        return ( pathname || ctx.location.pathname ).slice( 1 ).split( '/' ).filter( function ( r ) {
+            return !!r;
+        } );
+    };
+
 } )( window );
