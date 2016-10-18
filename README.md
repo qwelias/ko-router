@@ -97,20 +97,41 @@ Return child page matched to a ```route```.
 #### .check()
 Internal function.
 
+Return a ```Promise.all``` result of page guards.
+
 #### .ensureTemplate()
 Internal function.
+
+Literally the function name.
 
 #### .open( current )
 Internal function.
 
+Apply *template* binding to the page's elemtent.
+
+Expands **Knockout**'s bindingContext of the element with ```_page``` as a reference to this page.
+
 #### .close()
 Internal function.
+
+Yeah.
 
 #### .closeChildren()
 Internal function.
 
+Yep.
+
 #### .closeSiblings()
 Internal function.
 
+Hmm.
+
+### Bindings
+
+#### page
+
+
+#### nav
+
 ## Warnings
-Internal functions should not be called, but hey!
+Internal functions should not be called manually, but hey!
