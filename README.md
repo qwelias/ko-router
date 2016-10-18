@@ -88,6 +88,12 @@ Filled automatically.
 #### .path()
 Return a path to the page.
 
+#### .parent()
+Return parent.
+
+#### .next( route )
+Return child page matched to a ```route```.
+
 #### .check()
 Internal function.
 
@@ -106,8 +112,5 @@ Internal function.
 #### .closeSiblings()
 Internal function.
 
-#### .next( route )
-Internal function.
-
-#### .parent()
-Return parent.
+## Warnings
+Internal functions should not be called, but hey!
