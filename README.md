@@ -11,9 +11,9 @@ Knockout dummy router
 ## Usage
 Upon load creates ```window.router```.
 
-- [```window.router```](windowrouter)
-- [```window.router.Page```](windowrouterpage-data-)
-- [Bindings](bindings)
+- [```window.router```](#windowrouter)
+- [```window.router.Page```](#windowrouterpage-data-)
+- [Bindings](#bindings)
 
 ### window.router
 
