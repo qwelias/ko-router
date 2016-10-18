@@ -9,7 +9,7 @@ Knockout dummy router
 - polyfill.io recommended
 
 ## Usage
-Upon load creates ```window.router```
+Upon load creates ```window.router```.
 
 ### window.router
 
@@ -43,7 +43,7 @@ Assign it something that will hide some loader.
 Called if path not found. Override it.
 
 #### .root
-A root Page.
+A root Page, created upon load.
 
 ### window.router.Page( data )
 Page class.
@@ -79,7 +79,7 @@ Current page route.
 Template source to load if not found.
 
 #### .context = data.context
-**Knockout**'s element's *bindingContext*.
+**Knockout**'s *bindingContext* of the parent's element.
 
 #### .to = {}
 References to child pages.
@@ -97,7 +97,7 @@ Return child page matched to a ```route```.
 #### .check()
 Internal function.
 
-Return a ```Promise.all``` result of page guards.
+Return a ```Promise.all``` result of the page's guards.
 
 #### .ensureTemplate()
 Internal function.
@@ -129,9 +129,12 @@ Hmm.
 ### Bindings
 
 #### page
-
+Creates Page instance, passing value to the constructor, and bounds it to a parent's ```to``` upon init.
 
 #### nav
+Pass either relative or absolute local path to ```navigate``` to upon element click event.
+
+Would not call ```navigate``` and will pass an event, so a new tab is opened, if element is *A* tag and clicked with either MMB or Ctrl + LMB, to preserve native browser behavior.
 
 ## Warnings
 Internal functions should not be called manually, but hey!
