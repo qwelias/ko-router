@@ -5,36 +5,45 @@ Knockout dummy router
 - knockout v3.4+
 - URL
 - Promise
-- es6-shim recommended
+- fetch
+- polyfill.io recommended
 
 ## Usage
 Upon load creates ```window.router```
 
-### router.route
-```ko.observableArray``` containing pathname splitted by '/'.
+### window.router
+
+#### route
+*ko.observableArray* containing pathname splitted by "/".
+
 Updated after successful navigation.
 
-### router.navigate( data )
-```data``` is either a local href to navigate to
-or an object ```{ state, title, href }```.
+#### navigate( href )
+```href``` is either a relative or absolute local path.
+
 Returns a Promise.
 
-### router.resolvePath( ...paths )
+#### resolvePath( ...paths )
 Will resolve ```paths``` in relation to ```location.origin```
 
-### router.start()
+#### start()
 Will enable router and return a Promise.
 
-### router.loader.start()
-Dummy function, called upon navigation starts.
+#### loader.start()
+Dummy function, called when navigation starts.
+
 Assign it something that will show some loader.
 
-### router.loader.done()
-Dummy function, called upon navigation ends.
+#### loader.done()
+Dummy function, called when navigation ends.
+
 Assign it something that will hide some loader.
 
-### router.guard.set( path, functions )
-Set an array of functions to a specific URL path, every function will recieve next path piece as an argument and should return a Promise. If rejected navigation stops.
+#### on404
+Called if path not found. Override it.
+
+#### root
+A root Page.
 
 #### Examples
 
