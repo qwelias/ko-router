@@ -1,8 +1,9 @@
 # ko-router
-Knockout dummy router
+Knockout HTML5 History router
 
 ## Requirements
 - knockout v3.4+
+- HTML5 History
 - URL
 - Promise
 - fetch
