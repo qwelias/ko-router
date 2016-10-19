@@ -53,6 +53,7 @@
                 title: value.title || parent.title,
                 template: value.template,
                 guards: value.guards,
+                onclose: value.onclose,
                 context: bindingContext
             } );
             page.close();
@@ -86,10 +87,11 @@
         this.title = data.title;
         this.template = data.template;
         this.guards = data.guards || [];
+        this.onclose = data.onclose;
         this.current = '';
         this.src = data.src;
         this.context = data.context;
-        this.to = data.to || {};
+        this.to = {};
     };
     Page.prototype.check = function check( route ) {
         return Promise.all( this.guards.map( function ( guard ) {
@@ -131,23 +133,30 @@
     };
     Page.prototype.close = function close() {
         this.current = '';
-        Array.from( this.element.children ).map( function ( c ) {
-            c.remove();
-        } );
-        this.element.style.display = 'none';
-        return this;
+        var children = Array.from( this.element.children );
+        var ready = Promise.resolve();
+
+        if ( children.length && this.onclose ) ready = this.onclose.bind( this );
+
+        return ready.then( function () {
+            children.map( function ( c ) {
+                c.remove();
+            } );
+            this.element.style.display = 'none';
+            return this;
+        }.bind( this ) );
     };
     Page.prototype.closeChildren = function closeChildren() {
-        Object.keys( this.to ).map( function ( t ) {
-            this.to[ t ].close();
-        }.bind( this ) );
+        return Promise.all( Object.keys( this.to ).map( function ( t ) {
+            return this.to[ t ].close();
+        }.bind( this ) ) );
     };
     Page.prototype.closeSiblings = function closeSiblings() {
         var parent = this.parent();
         if ( !parent ) return;
-        Object.keys( parent.to ).map( function ( t ) {
-            if ( parent.to[ t ] !== this ) parent.to[ t ].close();
-        }.bind( this ) );
+        return Promise.all( Object.keys( parent.to ).map( function ( t ) {
+            if ( parent.to[ t ] !== this ) return parent.to[ t ].close();
+        }.bind( this ) ) );
     };
     Page.prototype.next = function next( route ) {
         if ( !route && this.to[ '/' ] ) return this.to[ '/' ];
@@ -177,7 +186,7 @@
         } ) ).then( function ( page ) {
             ctx.document.title = page.title || router.root.title;
             router.loader.done();
-            return Promise.resolve( page );
+            return page;
         } ).catch( function ( e ) {
             if ( e instanceof Promise ) return e;
             if ( e instanceof Error && e.message === 'Page not found' )
@@ -190,17 +199,17 @@
     function workGuard( cur ) {
         var r = cur.rt.shift();
         var next = cur.page.next( r );
-        if ( !next ) {
-            cur.page.closeChildren();
+        if ( !next ) return cur.page.closeChildren().then( function () {
             if ( r ) return Promise.reject( new Error( 'Page not found' ) );
             return Promise.resolve( cur.page );
-        };
+        }.bind( this ) );
         return Promise.all( [ next.check( r ), next.ensureTemplate() ] ).then( function ( res ) {
             cur.page = res[ 0 ];
             if ( cur.page.current === r ) return;
-            cur.page.closeSiblings();
+            return cur.page.closeSiblings();
+        }.bind( this ) ).then( function () {
             cur.page.open( r );
-        }.bind( this ) ).then( workGuard.bind( this, cur ) );
+        } ).then( workGuard.bind( this, cur ) );
     };
 
     function handlePop() {
