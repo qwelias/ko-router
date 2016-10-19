@@ -70,10 +70,17 @@ Title to set to the document, defaults to parent's title.
 #### .template = data.template
 Template value to pass to **Knockout**'s [*template*](http://knockoutjs.com/documentation/template-binding.html) binding.
 
-#### .guards = data.guards
-Array of functions to be called in ```Promise.all``` on an attempt to open the page.
+#### .guard = data.guard
+Function to be called on an attempt to open the page.
 
-Each function accepts it's piece of route as first argument and is boud to a page, should return a Promise. Root page is the exception as it accepts whole array of routes. Useful for any kind of (a)synchronous checks/prehooks.
+Function accepts it's piece of route as first argument and is boud to a page, should return a Promise. Root page is the exception as it accepts whole array of routes. Useful for any kind of (a)synchronous checks/prehooks.
+
+If you want to return a [```window.router.navigate( href )```](#navigate-href-) wrap it into ```Promise.reject``` so that previous navigation stops.
+
+#### .onclose = data.guard
+Function to be called on an attempt to close the page.
+
+Bound to a page.
 
 If you want to return a [```window.router.navigate( href )```](#navigate-href-) wrap it into ```Promise.reject``` so that previous navigation stops.
 
