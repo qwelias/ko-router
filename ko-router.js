@@ -70,8 +70,11 @@
             var route = page.path ? page.path() : '/';
             if ( element.tagName === 'A' ) element.href = router.resolvePath( route, value );
             element.onclick = function ( ev ) {
-                if ( ev.button !== 0 || ( ev.ctrlKey && ev.button === 0 ) ) return true;
                 var href = this.href || router.resolvePath( route, value );
+                if ( ev.button !== 0 || ( ev.ctrlKey && ev.button === 0 ) ) {
+                    if ( this.tagName !== 'A' ) window.open( href, '_blank' ).focus();
+                    return true;
+                };
                 router.navigate( href );
                 return false;
             };
@@ -204,7 +207,7 @@
         return Promise.all( [ next.check( r ), next.ensureTemplate() ] ).then( function ( res ) {
             cur.page = res[ 0 ];
             if ( cur.page.current === r ) return;
-            return cur.page.closeSiblings().then(function(){
+            return cur.page.closeSiblings().then( function () {
                 cur.page.open( r );
             } );
         } ).then( workGuard.bind( this, cur ) );
