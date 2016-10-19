@@ -68,7 +68,7 @@ Values:
 Title to set to the document, defaults to parent's title.
 
 #### .template = data.template
-Template value to pass to **Knockout**'s *template* binding.
+Template value to pass to **Knockout**'s [*template*](http://knockoutjs.com/documentation/template-binding.html) binding.
 
 #### .guards = data.guards
 Array of functions to be called in ```Promise.all``` on an attempt to open the page.
