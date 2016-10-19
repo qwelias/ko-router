@@ -77,7 +77,7 @@ Function accepts it's piece of route as first argument and is boud to a page, sh
 
 If you want to return a [```window.router.navigate( href )```](#navigate-href-) wrap it into ```Promise.reject``` so that previous navigation stops.
 
-#### .onclose = data.guard
+#### .onclose = data.onclose
 Function to be called on an attempt to close the page.
 
 Bound to a page.
