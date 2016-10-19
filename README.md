@@ -148,7 +148,7 @@ Or updates existing one.
 #### nav
 Pass either relative or absolute local path to [```navigate```](#navigate-href-) to upon element click event.
 
-Would not call [```navigate```](#navigate-href-) and will pass an event, so a new tab is opened, if element is *A* tag and clicked with either MMB or Ctrl + LMB, to preserve native browser behavior.
+Would not call [```navigate```](#navigate-href-) and will pass an event, so a new tab is opened, if clicked with either MMB or Ctrl + LMB, to preserve native browser behavior.
 
 ## Warnings
 Internal functions should not be called manually, but hey!
