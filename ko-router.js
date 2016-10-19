@@ -24,7 +24,7 @@
         },
         navigate: function navigate( href ) {
             href = router.resolvePath( href );
-            return guard( path( href ) ).then( function () {
+            return guards( path( href ) ).then( function () {
                 ctx.history.pushState( {}, '', href );
                 router.route( path() );
             } );
@@ -52,7 +52,8 @@
                 src: value.src,
                 title: value.title || parent.title,
                 template: value.template,
-                guards: value.guards,
+                guard: value.guard,
+                onclose: value.onclose,
                 context: bindingContext
             } );
             page.close();
@@ -85,16 +86,15 @@
         this.route = data.route;
         this.title = data.title;
         this.template = data.template;
-        this.guards = data.guards || [];
+        this.guard = data.guard;
+        this.onclose = data.onclose;
         this.current = '';
         this.src = data.src;
         this.context = data.context;
-        this.to = data.to || {};
+        this.to = {};
     };
     Page.prototype.check = function check( route ) {
-        return Promise.all( this.guards.map( function ( guard ) {
-            return guard.call( this, route );
-        }.bind( this ) ) ).then( function () {
+        return wrap( this.guard, this, [ route ] ).then( function () {
             return this;
         }.bind( this ) );
     };
@@ -131,23 +131,30 @@
     };
     Page.prototype.close = function close() {
         this.current = '';
-        Array.from( this.element.children ).map( function ( c ) {
-            c.remove();
-        } );
-        this.element.style.display = 'none';
-        return this;
+        var children = Array.from( this.element.children );
+        var ready = Promise.resolve();
+
+        if ( children.length ) ready = wrap( this.onclose, this );
+
+        return ready.then( function () {
+            children.map( function ( c ) {
+                c.remove();
+            } );
+            this.element.style.display = 'none';
+            return this;
+        }.bind( this ) );
     };
     Page.prototype.closeChildren = function closeChildren() {
-        Object.keys( this.to ).map( function ( t ) {
-            this.to[ t ].close();
-        }.bind( this ) );
+        return Promise.all( Object.keys( this.to ).map( function ( t ) {
+            return this.to[ t ].close();
+        }.bind( this ) ) );
     };
     Page.prototype.closeSiblings = function closeSiblings() {
         var parent = this.parent();
         if ( !parent ) return;
-        Object.keys( parent.to ).map( function ( t ) {
-            if ( parent.to[ t ] !== this ) parent.to[ t ].close();
-        }.bind( this ) );
+        return Promise.all( Object.keys( parent.to ).map( function ( t ) {
+            if ( parent.to[ t ] !== this ) return parent.to[ t ].close();
+        }.bind( this ) ) );
     };
     Page.prototype.next = function next( route ) {
         if ( !route && this.to[ '/' ] ) return this.to[ '/' ];
@@ -168,7 +175,7 @@
         return Object.path( this, 'context._page' ) || router.root;
     };
 
-    function guard( rt ) {
+    function guards( rt ) {
         router.loader.start();
         console.log( 'GUARD', rt );
         return router.root.check( rt ).then( workGuard.bind( this, {
@@ -177,7 +184,7 @@
         } ) ).then( function ( page ) {
             ctx.document.title = page.title || router.root.title;
             router.loader.done();
-            return Promise.resolve( page );
+            return page;
         } ).catch( function ( e ) {
             if ( e instanceof Promise ) return e;
             if ( e instanceof Error && e.message === 'Page not found' )
@@ -190,21 +197,21 @@
     function workGuard( cur ) {
         var r = cur.rt.shift();
         var next = cur.page.next( r );
-        if ( !next ) {
-            cur.page.closeChildren();
+        if ( !next ) return cur.page.closeChildren().then( function () {
             if ( r ) return Promise.reject( new Error( 'Page not found' ) );
             return Promise.resolve( cur.page );
-        };
+        }.bind( this ) );
         return Promise.all( [ next.check( r ), next.ensureTemplate() ] ).then( function ( res ) {
             cur.page = res[ 0 ];
             if ( cur.page.current === r ) return;
-            cur.page.closeSiblings();
-            cur.page.open( r );
-        }.bind( this ) ).then( workGuard.bind( this, cur ) );
+            return cur.page.closeSiblings().then(function(){
+                cur.page.open( r );
+            } );
+        } ).then( workGuard.bind( this, cur ) );
     };
 
     function handlePop() {
-        return guard( path() ).then( function () {
+        return guards( path() ).then( function () {
             router.route( path() );
         } );
     };
@@ -213,6 +220,19 @@
         return ( pathname || ctx.location.pathname ).slice( 1 ).split( '/' ).filter( function ( r ) {
             return !!r;
         } );
+    };
+
+    function wrap( target, reciever, args ) {
+        if ( target instanceof Error ) return Promise.reject( target );
+        if ( !( target instanceof Function ) ) return Promise.resolve( target );
+        if ( !Array.isArray( args ) ) args = [ args ];
+        try {
+            var r = target.apply( reciever, args );
+            if ( !( r instanceof Promise ) ) return Promise.resolve( r );
+            return r;
+        } catch ( e ) {
+            return Promise.reject( e );
+        };
     };
 
 } )( window );
