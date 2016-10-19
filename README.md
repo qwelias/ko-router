@@ -75,7 +75,7 @@ Array of functions to be called in ```Promise.all``` on an attempt to open the p
 
 Each function accepts it's piece of route as first argument and is boud to a page, should return a Promise. Root page is the exception as it accepts whole array of routes. Useful for any kind of (a)synchronous checks/prehooks.
 
-If you want to return a ```window.router.navigate( href )``` wrap it into ```Promise.reject``` so that previous navigation stops.
+If you want to return a [```window.router.navigate( href )```](#navigate-href-) wrap it into ```Promise.reject``` so that previous navigation stops.
 
 #### .current = ''
 Current page route.
@@ -137,9 +137,9 @@ Hmm.
 Creates Page instance, passing value to the constructor, and bounds it to a parent's ```to``` upon init.
 
 #### nav
-Pass either relative or absolute local path to ```navigate``` to upon element click event.
+Pass either relative or absolute local path to [```navigate```](#navigate-href-) to upon element click event.
 
-Would not call ```navigate``` and will pass an event, so a new tab is opened, if element is *A* tag and clicked with either MMB or Ctrl + LMB, to preserve native browser behavior.
+Would not call [```navigate```](#navigate-href-) and will pass an event, so a new tab is opened, if element is *A* tag and clicked with either MMB or Ctrl + LMB, to preserve native browser behavior.
 
 ## Warnings
 Internal functions should not be called manually, but hey!
