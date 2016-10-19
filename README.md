@@ -143,6 +143,8 @@ Hmm.
 #### page
 Creates Page instance, passing value to the constructor, and bounds it to a parent's ```to``` upon init.
 
+Or updates existing one.
+
 #### nav
 Pass either relative or absolute local path to [```navigate```](#navigate-href-) to upon element click event.
 
