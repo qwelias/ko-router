@@ -1,5 +1,7 @@
 # ko-router
-Knockout HTML5 History router
+Knockout HTML5 History router.
+
+Supports template lazy-load, (a)synchronous pre-, post-hooks and is just under 250 lines.
 
 ## Requirements
 - knockout v3.4+
