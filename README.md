@@ -9,7 +9,7 @@ Supports template lazy-load, (a)synchronous pre-, post-hooks and is just under 2
 - URL
 - Promise
 - fetch
-- polyfill.io recommended
+- [polyfill.io](https://polyfill.io) recommended
 
 ## Usage
 Upon load creates ```window.router```.
