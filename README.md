@@ -34,7 +34,7 @@ window.router.root.guard = function ( route ) {
     // if location == '/home/foo', then route == [ 'home', 'foo' ]
     // only root guard will receive whole route
     // navigate to /home if location == '/'
-    if ( !route.length ) return Promise.reject( window.router.navigate( '/home' ) );
+    if ( !route.length ) return Promise.reject( window.router.navigate( '/home' ) ); // reject current navigation
 };
 
 return window.router.start();
@@ -51,7 +51,7 @@ index.html
         template: 'tmpl-page-home',
         guard: function( id ) {
             // id === 'home'
-            if ( !app.me._id ) return Promise.reject( router.navigate( '/login' ) );
+            if ( !app.me._id ) return Promise.reject( router.navigate( '/login' ) ); // reject current navigation
         },
         src: '/pages/home.html',
         title: 'home'
@@ -64,7 +64,7 @@ index.html
         template: 'tmpl-page-login',
         guard: function( id ) {
             // id === 'login'
-            if ( app.me._id ) return Promise.reject( router.navigate( '/home' ) );
+            if ( app.me._id ) return Promise.reject( router.navigate( '/home' ) ); // reject current navigation
         },
         src: '/pages/login.html',
         title: 'login'
