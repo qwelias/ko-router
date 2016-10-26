@@ -76,7 +76,7 @@ index.html
 </body>
 ```
 
-/page/home.html
+page/home.html
 ```html
 <script type="text/html"
     id="tmpl-page-home">
@@ -97,7 +97,7 @@ index.html
             if ( !app[ id ] ) return Promise.reject();
 
             // reload foo table from server
-            return app[ id ].table.reload( id === this.current ); // returns Promise
+            return app[ id ].table.reload(); // returns Promise
         },
         src: '/pages/content.html'
     }">
