@@ -18,7 +18,7 @@ Upon load creates ```window.router```.
 - [```window.router.Page```](#windowrouterpage-data-)
 - [Bindings](#bindings)
 
-### Examples
+### Example
 
 index.js
 ```js
@@ -76,7 +76,7 @@ index.html
 </body>
 ```
 
-page/home.html
+pages/home.html
 ```html
 <script type="text/html"
     id="tmpl-page-home">
