@@ -1,10 +1,6 @@
 ( function ( ctx ) {
     "use strict";
 
-    var params = {
-        endWithComma: false
-    };
-
     var router = ctx.router = {
         on404: function ( rt, e ) {
             throw new Error( [
@@ -18,13 +14,13 @@
         } ),
         resolvePath: function resolvePath() {
             var args = Array.from( arguments );
-            var url = args.map( function ( r ) {
-                if ( r.slice( -1 ) !== '/' ) r += '/';
+            var url = args.map( function ( r, i, s ) {
+                if ( r.slice( -1 ) !== '/' && i !== s.length - 1 ) r += '/';
                 return r;
             } ).reduce( function ( url, path ) {
                 return new ctx.URL( path, url.href );
             }, new ctx.URL( ctx.location.origin ) );
-            return ( params.endWithComma ? url.pathname : url.pathname.slice( 0, -1 ) ) + url.search + url.hash;
+            return url.pathname + url.search + url.hash;
         },
         navigate: function navigate( href ) {
             href = router.resolvePath( href );
@@ -34,7 +30,6 @@
             } );
         },
         start: function start( opts ) {
-            params = Object.assign( params, opts );
             return ( ctx.onpopstate = handlePop )();
         },
         loader: {
