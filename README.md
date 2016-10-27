@@ -18,7 +18,7 @@ Upon load creates ```window.router```.
 - [```window.router.Page```](#windowrouterpage-data-)
 - [Bindings](#bindings)
 
-### Example
+### Examples
 
 index.js
 ```js
@@ -76,12 +76,15 @@ index.html
 </body>
 ```
 
-pages/home.html
+page/home.html
 ```html
 <script type="text/html"
     id="tmpl-page-home">
 
     <!-- some page content -->
+
+    <!-- link to /home/foo -->
+    <a data-bind="nav: 'foo'">foo</a>
 
     <!-- /home/foo -->
     <div data-bind="page: {
