@@ -126,8 +126,11 @@ Returns a Promise.
 ### .resolvePath( ...paths )
 Will resolve ```paths``` in relation to ```location.origin```
 
-### .start()
+### .start( options = { endWithComma = false } )
 Will enable router and return a Promise.
+
+**options**:
+- *endWithComma*: whether to resolve paths with '/' at the end of pathname or not.
 
 ### .loader.start()
 Dummy function, called when navigation starts.

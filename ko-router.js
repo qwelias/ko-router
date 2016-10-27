@@ -1,6 +1,10 @@
 ( function ( ctx ) {
     "use strict";
 
+    var params = {
+        endWithComma: false
+    };
+
     var router = ctx.router = {
         on404: function ( rt, e ) {
             throw new Error( [
@@ -20,7 +24,7 @@
             } ).reduce( function ( url, path ) {
                 return new ctx.URL( path, url.href );
             }, new ctx.URL( ctx.location.origin ) );
-            return url.pathname + url.search + url.hash;
+            return ( params.endWithComma ? url.pathname : url.pathname.slice( 0, -1 ) ) + url.search + url.hash;
         },
         navigate: function navigate( href ) {
             href = router.resolvePath( href );
@@ -29,7 +33,8 @@
                 router.route( path() );
             } );
         },
-        start: function start() {
+        start: function start( opts ) {
+            params = Object.assing( params, opts );
             return ( ctx.onpopstate = handlePop )();
         },
         loader: {
@@ -230,7 +235,7 @@
         if ( !( target instanceof Function ) ) return Promise.resolve( target );
         if ( !Array.isArray( args ) ) args = [ args ];
         try {
-            var r = target.apply( reciever, args );
+            var r = ( reciever || args ) ? target.apply( reciever, args ) : target.call();
             if ( !( r instanceof Promise ) ) return Promise.resolve( r );
             return r;
         } catch ( e ) {
