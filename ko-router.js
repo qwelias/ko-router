@@ -34,7 +34,7 @@
             } );
         },
         start: function start( opts ) {
-            params = Object.assing( params, opts );
+            params = Object.assign( params, opts );
             return ( ctx.onpopstate = handlePop )();
         },
         loader: {
