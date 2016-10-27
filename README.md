@@ -94,7 +94,7 @@ page/home.html
         template: 'tmpl-page-content',
         guard: function ( id ) {
 
-            // guard called on any location change
+            // guard called on any location change that involved the page
             // so resolve if already was opened
             if ( id === this.current ) return Promise.resolve();
 
