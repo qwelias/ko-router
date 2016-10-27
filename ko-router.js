@@ -175,7 +175,11 @@
     };
     Page.prototype.parent = function parent() {
         if ( this === router.root ) return;
-        return Object.path( this, 'context._page' ) || router.root;
+        try {
+            return this.context._page || router.root;
+        } catch ( e ) {
+            return router.root;
+        };
     };
 
     function guards( rt ) {
