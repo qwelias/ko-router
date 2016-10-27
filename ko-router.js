@@ -1,16 +1,22 @@
-( function ( ctx ) {
+( function ( root, factory ) {
+    if ( typeof define === 'function' && define.amd ) {
+        define( [ 'ko' ], factory );
+    } else {
+        root.router = factory( root.ko );
+    };
+}( this, function ( ko ) {
     "use strict";
 
-    var router = ctx.router = {
+    var router = {
         on404: function ( rt, e ) {
             throw new Error( [
                 'Path' + router.resolvePath.apply( router, rt ) + ' not found.',
                 'You can handle the error by overriding this function.'
             ].join( '\n' ) );
         },
-        route: ctx.ko.observableArray(),
+        route: ko.observableArray(),
         root: Page( {
-            title: ctx.document.title
+            title: window.document.title
         } ),
         resolvePath: function resolvePath() {
             var args = Array.from( arguments );
@@ -18,19 +24,19 @@
                 if ( r.slice( -1 ) !== '/' && i !== s.length - 1 ) r += '/';
                 return r;
             } ).reduce( function ( url, path ) {
-                return new ctx.URL( path, url.href );
-            }, new ctx.URL( ctx.location.origin ) );
+                return new window.URL( path, url.href );
+            }, new window.URL( window.location.origin ) );
             return url.pathname + url.search + url.hash;
         },
         navigate: function navigate( href ) {
             href = router.resolvePath( href );
             return guards( path( href ) ).then( function () {
-                ctx.history.pushState( {}, '', href );
+                window.history.pushState( {}, '', href );
                 router.route( path() );
             } );
         },
         start: function start( opts ) {
-            return ( ctx.onpopstate = handlePop )();
+            return ( window.onpopstate = handlePop )();
         },
         loader: {
             start: function () {},
@@ -39,7 +45,7 @@
     };
     router.Page = Page;
 
-    ctx.ko.bindingHandlers[ 'page' ] = {
+    ko.bindingHandlers[ 'page' ] = {
         init: function ( element, valueAccessor, allBindingsAccessor, viewModel, bindingContext ) {
             var value = valueAccessor();
             if ( !value.route ) throw new Error( 'route required' );
@@ -63,7 +69,7 @@
         }
     };
 
-    ctx.ko.bindingHandlers[ 'nav' ] = {
+    ko.bindingHandlers[ 'nav' ] = {
         update: function ( element, valueAccessor, allBindingsAccessor, viewModel, bindingContext ) {
             var value = valueAccessor();
             var page = bindingContext._page || {};
@@ -103,9 +109,9 @@
     };
     Page.prototype.ensureTemplate = function ensureTemplate() {
         var tmplname = this.template.name || this.template;
-        var tmpl = ctx.document.querySelector( 'script#' + tmplname );
+        var tmpl = window.document.querySelector( 'script#' + tmplname );
         if ( !tmpl && !this.src ) return Promise.reject( new Error( 'No template or source supplied' ) );
-        if ( !tmpl && this.src ) return ctx.fetch( encodeURI( this.src ) ).then( function ( response ) {
+        if ( !tmpl && this.src ) return window.fetch( encodeURI( this.src ) ).then( function ( response ) {
             if ( response.status !== 200 ) {
                 var e = new Error( response.statusText );
                 e.response = response;
@@ -117,14 +123,14 @@
             tmpl.innerHTML = text;
             tmpl = tmpl.firstChild;
             if ( !tmpl || tmpl.tagName !== 'SCRIPT' || tmpl.id !== tmplname ) throw new Error( 'Wrong source' );
-            ctx.document.body.appendChild( tmpl );
+            window.document.body.appendChild( tmpl );
         } );
     };
     Page.prototype.open = function open( current ) {
         this.current = current;
         if ( !this.template || !this.element ) return this;
 
-        ctx.ko.applyBindingsToNode( this.element, {
+        ko.applyBindingsToNode( this.element, {
             template: this.template
         }, this.context.extend( {
             _page: this
@@ -189,7 +195,7 @@
             rt: Array.from( rt ),
             page: router.root
         } ) ).then( function ( page ) {
-            ctx.document.title = page.title || router.root.title;
+            window.document.title = page.title || router.root.title;
             router.loader.done();
             return page;
         } ).catch( function ( e ) {
@@ -224,7 +230,7 @@
     };
 
     function path( pathname ) {
-        return ( pathname || ctx.location.pathname ).slice( 1 ).split( '/' ).filter( function ( r ) {
+        return ( pathname || window.location.pathname ).slice( 1 ).split( '/' ).filter( function ( r ) {
             return !!r;
         } );
     };
@@ -242,4 +248,6 @@
         };
     };
 
-} )( window );
+    return router;
+
+} ) );
