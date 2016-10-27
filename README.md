@@ -9,7 +9,8 @@ Supports template lazy-load, (a)synchronous pre-, post-hooks and is just under 2
 - URL
 - Promise
 - fetch
-- [polyfill.io](https://polyfill.io) recommended
+- es6-shim
+- [polyfill.io](https://polyfill.io) recommended ( URL, Promise, fetch, es6-shim )
 
 ## Usage
 Upon load creates ```window.router```.
@@ -25,6 +26,7 @@ index.js
 // on ready
 window.ko.applyBindings( app );
 
+// optional loader animation
 if ( window.someLoader ) {
     window.router.loader.start = window.someLoader.start;
     window.router.loader.done = window.someLoader.done;
