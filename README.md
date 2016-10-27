@@ -98,7 +98,7 @@ page/home.html
             // so resolve if already was opened
             if ( id === this.current ) return Promise.resolve();
 
-            // reject if missnavigation
+            // reject if misnavigation
             if ( !app[ id ] ) return Promise.reject();
 
             // reload foo table from server
